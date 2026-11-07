@@ -1,6 +1,6 @@
 ---
 title: Connect and Query an Azure SQL Database Container
-description: Create a local Azure SQL Database container, connect with SQL Server Management Studio (SSMS), and run your first T-SQL queries.
+description: Create a local Azure SQL Database container with the SQL Server Management Studio (SSMS) wizard on Windows x64, connect, and run your first T-SQL queries.
 author: mbarickman
 ms.author: mbarickman
 ms.reviewer: mahyon
@@ -19,50 +19,90 @@ ai-usage: ai-assisted
 
 [!INCLUDE [asdb](../includes/applies-to-version/asdb.md)]
 
-<!-- DRAFT: Public Preview is planned for November 17, 2026. Confirm release status, public image URI and tag, licensing, SSMS minimum version, and wizard behavior before publication. Current sources describe Private Preview. Confirm article ownership with the SSMS documentation team. -->
+<!-- DRAFT: Public Preview is planned for November 17, 2026. Confirm release status, licensing, SSMS minimum version, and exact wizard labels before publication. The SSMS wizard starts Azure SQL Database containers and supports Windows x64 only, per product-owner guidance. Confirm article ownership with the SSMS documentation team. -->
 
-Use SQL Server Management Studio (SSMS) to connect to the Azure SQL Database engine running locally in a container and run Transact-SQL (T-SQL) commands. The container is free for local development and testing and doesn't require an Azure subscription. It isn't the SQL Server container and isn't intended for production workloads.
+Create a local Azure SQL Database container by using the SSMS provisioning wizard, then connect and run Transact-SQL (T-SQL) commands. You don't need to write container startup commands. The container is free for local development and testing and doesn't require an Azure subscription or credit card.
 
-For an overview, see [What is the Azure SQL Database container?](https://microsoft.github.io/azure-sql-database-container/what-is-the-container.html).
+The SSMS container provisioning wizard supports **Azure SQL Database containers only**, not SQL Server containers. This SSMS workflow supports **Windows x64**. ARM devices aren't supported for this workflow.
 
-> [!IMPORTANT]
-> This article is a draft for the planned public preview. The current product documentation describes private preview access and incomplete SSMS graphical tooling compatibility. The manual setup below uses the currently documented preview image. The SSMS provisioning wizard instructions and screenshots are placeholders until the release build is available for verification.
+> [!NOTE]
+> This article is a draft for the planned Azure SQL Database container public preview. The wizard entry point, exact field labels, and screenshots are pending verification in the SSMS release build. The wizard-first procedure below describes the intended workflow without assuming VS Code commands or menus.
 
 This quickstart demonstrates the following steps:
 
 > [!div class="checklist"]
 >
-> - Start a local Azure SQL Database container
+> - Create and start a local Azure SQL Database container with the SSMS wizard
 > - Connect to the container in SSMS
 > - Create a database and connect directly to it
 > - Create a table, insert rows, and query the results
 > - Verify the database and engine identity
 > - Clean up the local resources
 
+## What is an Azure SQL Database container?
+
+A container packages the Azure SQL Database engine so that a container runtime can run it on your computer. Your application connects to a local address such as `localhost,1433`, rather than an Azure SQL logical server.
+
+The container runs the Azure SQL Database engine, not the SQL Server container image. It supports Azure SQL Database T-SQL and the Tabular Data Stream (TDS) protocol used by SQL drivers. `SERVERPROPERTY('EngineEdition')` returns `5`, identifying the Azure SQL Database engine. Native vectors, vector search, and JSON let you explore AI-ready data scenarios locally.
+
+The container doesn't provide the managed cloud service. Azure-managed backups, high availability, elastic pools, and serverless auto-pause are cloud capabilities, not local container features. For more information, see [What is the Azure SQL Database container?](https://microsoft.github.io/azure-sql-database-container/what-is-the-container.html).
+
+## Choose your development database
+
+| Option | Choose it when | Cost and account requirements |
+| --- | --- | --- |
+| Azure SQL Database container through SSMS | You want to learn SQL or build and test an application targeting Azure SQL Database locally on Windows x64. | Free for local development and testing. No Azure subscription or credit card required. |
+| Azure SQL Database in Azure | You need a managed database, cloud integration, or a cloud validation environment. | Requires an Azure subscription. The [Azure SQL Database free offer](/azure/azure-sql/database/free-offer) has separate eligibility requirements and usage allowances. |
+
+> [!IMPORTANT]
+> Azure SQL Database containers are for development, testing, CI, and demos, not production. For production, deploy your application and database to Azure SQL Database in Azure. The free local container and the Azure SQL Database free offer are separate options.
+
 ## Prerequisites
 
-- [Install SQL Server Management Studio](../install/install.md) on a supported Windows computer. See [SSMS system requirements](../system-requirements.md). The minimum SSMS version for the container provisioning wizard is pending confirmation.
-- Install and start a container runtime that runs Linux containers. This quickstart uses Docker Desktop with the Windows Subsystem for Linux 2 (WSL 2) backend on Windows. See [Docker Desktop installation on Windows](https://docs.docker.com/desktop/setup/install/windows-install/) and [container prerequisites](https://microsoft.github.io/azure-sql-database-container/prerequisites.html).
+- [Install SQL Server Management Studio](../install/install.md) on a supported **Windows x64** computer. Use a release that includes the Azure SQL Database container provisioning wizard. The minimum wizard version is pending confirmation.
+- Install and start a container runtime that runs Linux containers. For Docker Desktop, use the Windows Subsystem for Linux 2 (WSL 2) backend. See [Docker Desktop installation on Windows](https://docs.docker.com/desktop/setup/install/windows-install/). The runtime must also be supported by the SSMS wizard; its complete runtime support list is pending confirmation.
 - Allocate at least two CPU cores, 4 GB of memory, and 10 GB of free disk space to the container runtime.
-- Make local TCP port `1433` available, or choose a different host port.
-- Have internet access to pull the container image initially. After the image is downloaded, the local SQL authentication workflow doesn't require an Azure subscription or an internet connection.
-- For the currently documented private preview image, obtain registry access through the [private preview signup](https://aka.ms/sqldbcontainerpreview-signup). Don't share registry credentials.
+- Make a local TCP port available for the database connection. This quickstart uses `1433`; use your actual host port if it differs.
+- Have internet access for the initial image download. After the image is cached, local queries don't require a cloud database. External AI endpoints and other online services still require connectivity.
 
-The image provides native `linux/amd64` and `linux/arm64` variants. Docker selects the matching architecture automatically. Container runtime support on macOS or Linux doesn't mean that SSMS runs on those operating systems. This quickstart runs both SSMS and the container runtime on Windows.
+For engine resource requirements, see [container prerequisites](https://microsoft.github.io/azure-sql-database-container/prerequisites.html). The engine's broader platform support doesn't change the Windows x64-only scope of the SSMS container provisioning experience. ARM isn't supported for this SSMS workflow.
 
-## Provision a container with the SSMS wizard (draft placeholder)
+## Create an Azure SQL Database container
 
-> [!NOTE]
-> The wizard entry point, page names, settings, and completion behavior haven't been verified in an SSMS release build. This section isn't an executable procedure yet. Don't substitute the VS Code MSSQL extension's container workflow. Use the manual procedure in the next section for the currently documented setup.
+Use the SSMS wizard to create and start the container. The wizard provisions an Azure SQL Database container; there isn't a SQL Server container option in this SSMS experience.
 
-Before publication, replace this section with verified SSMS instructions that explain how to:
+1. Start SSMS and open the Azure SQL Database container provisioning wizard.
 
-- Open the Azure SQL Database container provisioning wizard.
-- Check runtime prerequisites and select the Azure SQL Database image.
-- Configure the container name, host port, credentials, and data persistence.
-- Confirm whether the wizard creates a user database or requires a separate provisioning step.
-- Review the configuration, start the container, and handle startup failures.
-- Confirm whether the wizard opens a connection automatically and which database that connection targets.
+   **Draft placeholder:** Insert the verified SSMS menu or Object Explorer command here.
+
+1. Review the local development container information. Make sure that your container runtime is installed, running, and configured for Linux containers before proceeding. Resolve any prerequisite errors shown by the wizard.
+
+   <!-- DRAFT: Verify the SSMS prerequisite page, supported runtime choices, and exact navigation labels. Don't copy the MSSQL extension's runtime detection UI. -->
+
+1. Configure the container and connection. Use the following values for this quickstart, where the wizard exposes the corresponding settings:
+
+   | Setting | Tutorial value or guidance |
+   | --- | --- |
+   | Container name | `ssms-sqldb`, or another unique name |
+   | Host port | `1433`, or another available local port |
+   | SQL login | `sa` |
+   | Password | A unique, strong password for the local database login |
+
+   The password must contain at least eight characters and include characters from at least three of these categories: uppercase letters, lowercase letters, digits, and symbols. Store the password securely, not in source control or AI prompts.
+
+   Record the actual container name and host port for reconnection and cleanup. Keep access limited to your local computer. If the wizard offers data persistence settings, review them before provisioning so that you understand whether database files remain after the container is removed.
+
+   <!-- DRAFT: Confirm actual field names, which values are configurable, login defaults, port selection, loopback binding, and volume behavior. The table is guidance, not a verified inventory of SSMS fields. -->
+
+1. Review the license terms and the proposed configuration. Start provisioning from the wizard and wait for the image download and database engine startup to complete.
+
+   **Draft placeholder:** Insert the verified review page and action button labels here.
+
+1. After the engine is ready, note the local server endpoint and continue with [Connect to the container in SSMS](#connect-to-the-container-in-ssms).
+
+   If the wizard opens a connection automatically, check its database before using it. A running container, an SSMS connection, and a user database are different resources. Don't assume that provisioning the container has already created `TutorialDB`.
+
+   <!-- DRAFT: Verify progress states, automatic connection behavior, startup database creation, and failure recovery in the release build. -->
 
 ### Wizard screenshots placeholder
 
@@ -79,77 +119,6 @@ Before publication, replace this section with verified SSMS instructions that ex
 
 <!-- DRAFT: Add Learn :::image directives only after the screenshots exist. Store them in media/ssms-connect-query-azure-sql-database-container and supply descriptive alt text. Don't include passwords or registry credentials in screenshots. -->
 
-## Start a container manually
-
-Until the wizard procedure is verified, use the following PowerShell commands to provision the container.
-
-1. Open PowerShell and confirm that Docker is running:
-
-   ```powershell
-   docker info
-   ```
-
-   If the command fails, start Docker Desktop and make sure it's configured for Linux containers before continuing.
-
-1. For the current private preview, sign in to the registry. Replace `<registry-username>` with the username supplied through the preview signup. Enter the registry password at the prompt, not in the command:
-
-   ```powershell
-   docker login sqldbpreview-dpgaeqhmgphzd4bk.azurecr.io --username <registry-username>
-   ```
-
-   <!-- DRAFT: Replace private preview signup, registry sign-in, and image references with the confirmed public preview distribution instructions before publication. Don't invent an MCR path. -->
-
-1. Set the image and pull it:
-
-   ```powershell
-   $containerImage = 'sqldbpreview-dpgaeqhmgphzd4bk.azurecr.io/azure-sql/db-dev:latest'
-   docker pull $containerImage
-   ```
-
-   Don't continue if the pull fails. Check your registry access and the image reference against the [current getting-started instructions](https://microsoft.github.io/azure-sql-database-container/getting-started.html).
-
-1. In the same PowerShell window, choose a unique password for the local `sa` login:
-
-   ```powershell
-   $credential = Get-Credential -UserName 'sa' -Message 'Choose a strong password for the local container'
-   $env:MSSQL_SA_PASSWORD = $credential.GetNetworkCredential().Password
-   ```
-
-   The password must contain at least eight characters and include characters from at least three of these categories: uppercase letters, lowercase letters, digits, and symbols. The database password is separate from the registry password. Don't save either password in source control.
-
-1. Create the container with a named volume for database files:
-
-   ```powershell
-   docker run --detach --name ssms-sqldb `
-     --env ACCEPT_EULA=Y `
-     --env MSSQL_SA_PASSWORD `
-     --publish 127.0.0.1:1433:1433 `
-     --volume ssms-sqldb-data:/var/opt/mssql `
-     $containerImage
-   ```
-
-   `ACCEPT_EULA=Y` accepts the image's license terms. Review those terms before running the command. The port mapping limits access to the local computer. The named volume keeps database files when you remove the container; it isn't a backup.
-
-   If port `1433` is already in use, change the mapping to `127.0.0.1:1434:1433` and use `localhost,1434` in SSMS. If a container named `ssms-sqldb` already exists, choose a different name and use that name in the remaining commands. Don't remove an existing container without checking its data.
-
-1. Check the container status and startup logs:
-
-   ```powershell
-   docker ps --all --filter "name=ssms-sqldb"
-   docker logs ssms-sqldb
-   ```
-
-   A running container doesn't necessarily mean that the database engine is ready. Allow time for startup, then connect in the next section. If the connection fails, check the logs for password, memory, or startup errors before retrying.
-
-1. Remove the password from the PowerShell environment when you're finished creating the container:
-
-   ```powershell
-   Remove-Item Env:\MSSQL_SA_PASSWORD
-   Remove-Variable credential
-   ```
-
-   Keep the password available in a secure location for the SSMS connection. Docker retains the environment setting in the container configuration, so protect access to the Docker runtime.
-
 ## Connect to the container in SSMS
 
 1. Start SSMS. Open a Database Engine connection through **Object Explorer** > **Connect** > **Database Engine**.
@@ -161,8 +130,8 @@ Until the wizard procedure is verified, use the following PowerShell commands to
    | Server type, if shown | **Database Engine** |
    | Server name | `localhost,1433`, or the host port you selected |
    | Authentication | **SQL Server Authentication** |
-   | Login | `sa` |
-   | Password | The local database password you chose |
+   | Login | The SQL login configured during provisioning, such as `sa` |
+   | Password | The local database password you chose in the wizard |
    | Database name / Connect to database | `master` |
    | Encryption | **Mandatory**, or enable **Encrypt connection** in older dialogs |
    | Trust server certificate | Selected |
@@ -184,7 +153,9 @@ Until the wizard procedure is verified, use the following PowerShell commands to
 
 ## Create a database
 
-The current manual workflow doesn't create a user database automatically. On the `master` connection, run:
+Use `TutorialDB` as the example database name. Substitute your project's database name consistently if you choose another name.
+
+If the wizard already created `TutorialDB`, skip the following statement and connect directly to that database. Otherwise, on the `master` connection, run:
 
 ```sql
 CREATE DATABASE [TutorialDB];
@@ -192,6 +163,8 @@ GO
 ```
 
 Wait for the command to complete before connecting to `TutorialDB`. If a database with that name already exists, use a different name throughout this quickstart or confirm that the existing database is safe to use. Don't delete an existing database just to repeat the tutorial.
+
+Connecting to a database that doesn't exist doesn't create it. Use `master` for database provisioning and your user database for application queries.
 
 ## Connect directly to the new database
 
@@ -268,32 +241,87 @@ SSMS displays four rows in the **Results** pane:
 
 The query window status bar also identifies the server and database. Verify that it shows your local endpoint and `TutorialDB`, not an Azure database used for production.
 
+## Import your schema and data
+
+If you already have a database package, you can use Azure SQL-compatible [SqlPackage](/sql/tools/sqlpackage/sqlpackage) operations instead of creating the sample table manually.
+
+| Package | What it contains | Operation |
+| --- | --- | --- |
+| `.dacpac` | Database schema, without table data | [Publish](/sql/tools/sqlpackage/sqlpackage-publish) to deploy the schema to a development database. |
+| `.bacpac` | Database schema and table data | [Import](/sql/tools/sqlpackage/sqlpackage-import) into a new or empty development database. |
+
+Target the local server, host port, and intended user database. Review the target and proposed changes before proceeding, then connect directly to the user database to inspect the result. Don't import a BACPAC into `TutorialDB` after creating the sample table because the database isn't empty.
+
+<!-- DRAFT: Verify SSMS data-tier wizard compatibility before documenting an SSMS-specific package import or deployment menu path. -->
+
+SQL Server `.bak` files aren't BACPAC files. `BACKUP DATABASE` and `RESTORE DATABASE` aren't supported by the Azure SQL Database container.
+
+## Connect your application
+
+Use the local endpoint, the wizard's selected host port, your database name, and your credentials with an Azure SQL-compatible driver or object-relational mapper (ORM). For example, this ADO.NET-style connection string targets `TutorialDB`:
+
+```text
+Server=localhost,<host-port>;Database=TutorialDB;User ID=<sql-login>;Password=<password>;Encrypt=True;TrustServerCertificate=True;
+```
+
+Replace the placeholders before connecting. `TrustServerCertificate=True` is for the local container's self-signed certificate only. Use certificate validation and an appropriate authentication method for Azure SQL Database in Azure.
+
+Store connection strings in environment variables or your development secret store, not source control or AI prompts. Other drivers use different connection-string syntax. See [Get started with Microsoft.Data.SqlClient](/sql/connect/ado-net/get-started-sqlclient-driver).
+
+## Develop with AI
+
+You can use [GitHub Copilot in SSMS](../github-copilot/get-started.md) to explain SQL, draft queries, and plan schema changes against your local database. Review generated SQL and the selected connection before executing it. The local container is free; GitHub Copilot and external model services have their own access and pricing requirements.
+
+After creating `dbo.Customers`, try this prompt:
+
+```text
+I'm developing against an Azure SQL Database container.
+Use my existing TutorialDB connection. First confirm the active database
+and EngineEdition = 5. Explain the dbo.Customers schema, then draft a
+parameterized query to insert a customer and a query to list customers.
+Don't execute changes, delete data, or create cloud resources.
+Don't request or display passwords. Don't use USE to switch databases.
+```
+
+For code-first workflows, the [Azure SQL Database container agent skills](https://microsoft.github.io/azure-sql-database-container/agent-skills.html) provide setup, connection, migration, and local-to-cloud guidance for supported AI coding agents.
+
 ## Troubleshoot connectivity and tooling
 
 | Symptom | Action |
 | --- | --- |
-| Docker commands fail | Start the runtime and verify that it's configured for Linux containers. Run `docker info`. |
-| Image pull fails | Check the registry sign-in and current preview image instructions. |
-| Container exits or SSMS can't connect after startup | Run `docker logs ssms-sqldb`. Check the password policy and runtime resources, then retry after the engine is ready. |
-| Port is already allocated | Choose another host port when creating the container and use that port in the SSMS server name. |
+| Wizard isn't available | Confirm that your SSMS release includes the Azure SQL Database container wizard and that you're using Windows x64. The ARM workflow isn't supported. |
+| Runtime prerequisite check fails | Start the runtime and verify that it's configured for Linux containers. For Docker, run `docker info`. |
+| Image download fails | Review the wizard's error and check network access and any required image access settings. |
+| Container exits or SSMS can't connect after startup | Review provisioning errors and runtime logs for the actual container name. Check the password policy and runtime resources, then retry after the engine is ready. |
+| Port is already allocated | Use an available host port during provisioning and the same port in the SSMS connection. |
 | Certificate validation fails | For this local self-signed certificate only, enable **Trust server certificate** and keep encryption enabled. |
 | Can't open `TutorialDB` | Create the database on a `master` connection first, then open a separate connection directly to `TutorialDB`. |
 | `USE` returns error 40508 | Open a new connection that names the target database instead of switching databases within a session. |
-| Object Explorer or another graphical feature fails | Consult the [known limitations](https://microsoft.github.io/azure-sql-database-container/known-limitations.html). Current documentation warns that SSMS graphical tooling isn't fully compatible. Use the container's bundled `sqlcmd` as documented in [Getting started](https://microsoft.github.io/azure-sql-database-container/getting-started.html#step-3-connect-and-run-your-first-query) if the UI blocks progress. |
+| Object Explorer or another graphical feature fails | Check the error against the [known limitations](https://microsoft.github.io/azure-sql-database-container/known-limitations.html) for your preview build. The container's bundled `sqlcmd` is an alternative if a graphical feature blocks progress; see [Getting started](https://microsoft.github.io/azure-sql-database-container/getting-started.html#step-3-connect-and-run-your-first-query). |
 
-The container follows the Azure SQL Database feature surface, not the full SQL Server feature surface. SQL Server `BACKUP DATABASE` and `RESTORE DATABASE` aren't supported. Test your application against Azure SQL Database in the cloud before deploying it; current preview limitations can affect parity.
+Test your application against Azure SQL Database in the cloud before deploying it; preview restrictions, defaults, and feature support can differ.
+
+## Manage the container lifecycle
+
+You can reconnect to a running container with its local endpoint, user database, and credentials. Stopping the container makes it unavailable to SSMS and your application until it's started again. Removing a container and deleting its stored data are separate operations.
+
+<!-- DRAFT: Add verified SSMS start, stop, reconnect, and delete commands if the release provides them. Don't copy the VS Code Connections view commands. -->
+
+For a Docker-backed container, use the following PowerShell commands to stop and start it. Enter the actual container name recorded during provisioning:
+
+```powershell
+$containerName = Read-Host 'Enter the container name shown during provisioning'
+docker stop $containerName
+docker start $containerName
+```
+
+Run the stop and start commands separately as needed. After restarting, wait for the engine to be ready and reconnect directly to `TutorialDB` using the same credentials.
+
+If the wizard created a persistent volume, database files can remain after removing the container. Confirm the actual persistence configuration before deleting anything. A persistent volume isn't a backup and doesn't provide the cloud service's managed recovery.
 
 ## Clean up resources
 
-If you want to keep the tutorial data for another session, disconnect SSMS and stop the container:
-
-```powershell
-docker stop ssms-sqldb
-```
-
-Start it again with `docker start ssms-sqldb` and reconnect directly to `TutorialDB` using the same credentials.
-
-To remove the tutorial resources instead:
+To remove the tutorial resources:
 
 1. Close query windows and disconnect SSMS connections to `TutorialDB`.
 1. On a connection explicitly targeting `master`, run the following only if `TutorialDB` is the database you created for this tutorial:
@@ -303,20 +331,22 @@ To remove the tutorial resources instead:
    GO
    ```
 
-1. Disconnect the remaining SSMS connection, then stop and remove the tutorial container:
+1. Disconnect the remaining SSMS connection. For a Docker-backed container, enter its actual name, then stop and remove it:
 
    ```powershell
-   docker stop ssms-sqldb
-   docker rm ssms-sqldb
+   $containerName = Read-Host 'Enter the tutorial container name'
+   docker stop $containerName
+   docker rm $containerName
    ```
 
-1. Optionally remove the named volume:
+1. If provisioning created a Docker named volume, optionally remove it after confirming its name and contents:
 
    > [!WARNING]
-   > The following command permanently deletes all database files in `ssms-sqldb-data`, including any other databases you created there. Run it only if you no longer need that data and no other container uses the volume.
+   > Removing a volume permanently deletes its database files, including any other databases you created there. Run the following command only if you no longer need that data and no other container uses the volume.
 
    ```powershell
-   docker volume rm ssms-sqldb-data
+   $volumeName = Read-Host 'Enter the verified tutorial data volume name'
+   docker volume rm $volumeName
    ```
 
 Removing a container doesn't automatically remove its named volume. Stopping the container or retaining the volume doesn't provide the managed backup, high availability, or recovery services of Azure SQL Database in the cloud.
