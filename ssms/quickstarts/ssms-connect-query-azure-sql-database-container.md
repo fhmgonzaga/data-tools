@@ -1,9 +1,9 @@
 ---
 title: Connect and Query an Azure SQL Database Container
 description: Create a local Azure SQL Database container with the SQL Server Management Studio (SSMS) wizard on Windows x64, connect, and run your first T-SQL queries.
-author: mbarickman
-ms.author: mbarickman
-ms.reviewer: mahyon
+author: vamahtani
+ms.author: vamahtani
+ms.reviewer: mbarickman
 ms.date: 11/07/2026
 ms.service: sql-server-management-studio
 ms.topic: quickstart
@@ -26,7 +26,7 @@ Create a local Azure SQL Database container by using the SSMS provisioning wizar
 The SSMS container provisioning wizard supports **Azure SQL Database containers only**, not SQL Server containers. This SSMS workflow supports **Windows x64**. ARM devices aren't supported for this workflow.
 
 > [!NOTE]
-> This article is a draft for the planned Azure SQL Database container public preview. The wizard entry point, exact field labels, and screenshots are pending verification in the SSMS release build. The wizard-first procedure below describes the intended workflow without assuming VS Code commands or menus.
+> Azure SQL Database container is in public preview. 
 
 This quickstart demonstrates the following steps:
 
