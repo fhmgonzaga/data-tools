@@ -306,15 +306,18 @@ Test your application against Azure SQL Database in the cloud before deploying i
 
 You can reconnect to a running container with its local endpoint, user database, and credentials. Stopping the container makes it unavailable to SSMS and your application until it's started again. Deleting a wizard-created container permanently removes the databases stored inside it.
 
-For a Docker-backed container, use the following PowerShell commands to stop and start it. Enter the actual container name recorded during provisioning:
+In **Object Explorer**, right-click the container's server connection and select **Container Tasks**. Choose the action you need:
 
-```powershell
-$containerName = Read-Host 'Enter the container name shown during provisioning'
-docker stop $containerName
-docker start $containerName
-```
+| Action | Purpose |
+| --- | --- |
+| **Start Container** | Start a stopped container. |
+| **Stop Container** | Stop the container without deleting its databases. |
+| **Restart Container** | Restart the container, temporarily interrupting database connections. |
+| **Delete Container** | Remove the container and permanently delete its stored databases. |
 
-Run the stop and start commands separately as needed. After restarting, wait for the engine to be ready and reconnect directly to `TutorialDB` using the same credentials.
+:::image type="content" source="media/ssms-connect-query-azure-sql-database-container/container-management.png" alt-text="Screenshot of the Object Explorer server context menu with Container Tasks showing Start Container, Stop Container, Restart Container, and Delete Container.":::
+
+Actions can be unavailable depending on the container's current state. After starting or restarting, wait for the engine to be ready and reconnect directly to `TutorialDB` using the same credentials. **Disconnect** closes the Object Explorer connection; use **Stop Container** when you want to stop the container itself.
 
 Before deleting the container, use **Tasks** > **Create bacpac/dacpac (Preview)** on each database whose schema or data you need to retain. A schema-only DACPAC doesn't preserve table data. A package doesn't provide the managed backups or recovery services of Azure SQL Database in Azure.
 
@@ -332,16 +335,10 @@ To remove the tutorial resources:
    GO
    ```
 
-1. Disconnect the remaining SSMS connection. For a Docker-backed container, enter its actual name, then stop and remove it:
+1. In **Object Explorer**, right-click the tutorial container's server connection and select **Container Tasks** > **Delete Container**.
 
    > [!WARNING]
    > Removing the wizard-created container permanently deletes all databases stored inside it, not only `TutorialDB`. Make sure you have exported any data you need from other databases before continuing.
-
-   ```powershell
-   $containerName = Read-Host 'Enter the tutorial container name'
-   docker stop $containerName
-   docker rm $containerName
-   ```
 
 Stopping the container preserves it for a later session; removing it deletes its stored databases. The local container doesn't provide the managed backup, high availability, or recovery services of Azure SQL Database in the cloud.
 
