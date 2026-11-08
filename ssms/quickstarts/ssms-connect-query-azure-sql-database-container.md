@@ -86,16 +86,7 @@ Use the SSMS wizard to create and start the container. The wizard provisions an 
 
    :::image type="content" source="media/ssms-connect-query-azure-sql-database-container/runtime-readiness.png" alt-text="Screenshot of the Runtime readiness page reporting that the container runtime is ready to create the container.":::
 
-1. On **Container settings**, configure the database login:
-
-   | Setting | Value or guidance |
-   | --- | --- |
-   | **SQL Server image** | **Azure SQL Database**. Despite the field label, this wizard creates an Azure SQL Database container, not a SQL Server container. |
-   | **SA password** | A unique, strong password for the local `sa` login. |
-   | **Confirm SA password** | Enter the same password again. |
-   | **Remember password** | Select if you want SSMS to remember the password for the local connection. |
-
-   The password must contain at least eight characters and include characters from at least three of these categories: uppercase letters, lowercase letters, digits, and symbols. Store it securely, not in source control or AI prompts.
+1. On **Container settings**, configure the database login and enter your password. The password must contain at least eight characters and include characters from at least three of these categories: uppercase letters, lowercase letters, digits, and symbols. Store it securely, not in source control or AI prompts.
 
    Review **View license terms**, then select the license acceptance checkbox. Expand **Advanced options** if you need to review additional configuration. Select **Create**.
 
